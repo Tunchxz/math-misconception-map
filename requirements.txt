@@ -1,0 +1,25 @@
+# MAP - Charting Student Math Misunderstandings
+# Python 3.12
+
+# Manipulación de datos
+pandas>=2.2,<3
+numpy>=1.26,<3
+scipy>=1.13
+pyarrow>=16
+
+# Visualización
+matplotlib>=3.8
+seaborn>=0.13
+
+# Representación de texto y modelado exploratorio
+scikit-learn>=1.5
+nltk>=3.9
+
+# Descarga de los datos desde la API de Kaggle
+requests>=2.32
+
+# Entorno de notebooks
+ipykernel>=6.29
+jupyterlab>=4.2
+nbformat>=5.10
+nbclient>=0.10
