@@ -37,6 +37,14 @@ def leer_token() -> str:
     if ruta.exists():
         return ruta.read_text().strip()
 
+    en_colab = "google.colab" in sys.modules
+    if en_colab:
+        raise SystemExit(
+            "No se encontró el token de Kaggle.\n"
+            "En Colab: panel izquierdo, icono de la llave, agregar un secreto llamado\n"
+            "KAGGLE_ACCESS_TOKEN con el contenido de ~/.kaggle/access_token y activar\n"
+            "el acceso desde este cuaderno. Después vuelva a ejecutar la celda de arranque."
+        )
     raise SystemExit(
         "No se encontró el token de Kaggle. Se esperaba ~/.kaggle/access_token "
         "o la variable de entorno KAGGLE_ACCESS_TOKEN."
@@ -58,6 +66,12 @@ def descargar() -> None:
         headers={"Authorization": f"Bearer {leer_token()}"},
         timeout=300,
     )
+    if respuesta.status_code == 403:
+        raise SystemExit(
+            "Kaggle respondió 403. Acepte las reglas de la competencia en\n"
+            f"https://www.kaggle.com/competitions/{COMPETENCIA}/rules\n"
+            "con la misma cuenta a la que pertenece el token."
+        )
     respuesta.raise_for_status()
 
     with zipfile.ZipFile(io.BytesIO(respuesta.content)) as z:
@@ -144,6 +158,18 @@ def construir_limpio(crudo: pd.DataFrame) -> pd.DataFrame:
     return df[COLUMNAS_LIMPIAS]
 
 
+def asegurar_crudos(verbose: bool = True) -> Path:
+    """Garantiza que los archivos de `data/raw/` existan y devuelve su carpeta."""
+    faltantes = [n for n in ARCHIVOS if not (DATA_RAW / n).exists()]
+    if faltantes:
+        if verbose:
+            print(f"Faltan {faltantes} en {DATA_RAW}.")
+        descargar()
+    elif verbose:
+        print(f"Datos crudos disponibles en {DATA_RAW}")
+    return DATA_RAW
+
+
 def asegurar_datos(verbose: bool = True) -> pd.DataFrame:
     """Garantiza que exista `data/processed/train_limpio.parquet` y lo devuelve.
 
@@ -156,10 +182,7 @@ def asegurar_datos(verbose: bool = True) -> pd.DataFrame:
             print(f"Conjunto limpio encontrado en {destino}")
         return pd.read_parquet(destino)
 
-    if not (DATA_RAW / "train.csv").exists():
-        if verbose:
-            print("Faltan los datos crudos, descargando desde Kaggle...")
-        descargar()
+    asegurar_crudos(verbose=verbose)
 
     if verbose:
         print("Reconstruyendo el conjunto limpio...")
