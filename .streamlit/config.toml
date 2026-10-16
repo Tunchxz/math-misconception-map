@@ -1,0 +1,15 @@
+# Tema de la aplicación. Los colores provienen de la paleta de Okabe-Ito
+# definida en src/config.py, legible bajo los tres tipos de daltonismo.
+
+[theme]
+primaryColor = "#0072B2"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F4F6F8"
+textColor = "#1A1A1A"
+font = "sans serif"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false
