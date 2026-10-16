@@ -7,3 +7,6 @@ build/
 dist/
 .ipynb_checkpoints/
 tmp/
+
+# Paquetes descargados desde Google Colab
+*.zip
