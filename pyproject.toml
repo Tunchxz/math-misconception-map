@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "map-misconceptions"
+version = "0.2.0"
+description = "Detección de errores conceptuales de matemática a partir de explicaciones escritas"
+requires-python = ">=3.12"
+dynamic = ["dependencies"]
+
+[tool.setuptools]
+packages = [
+    "src",
+    "src.data",
+    "src.features",
+    "src.models",
+    "src.visualization",
+    "src.back_end",
+]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
