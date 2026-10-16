@@ -10,10 +10,17 @@ pyarrow>=16
 # Visualización
 matplotlib>=3.8
 seaborn>=0.13
+plotly>=5.22
 
-# Representación de texto y modelado exploratorio
-scikit-learn>=1.5
+# Representación de texto y modelado.
+# La versión de scikit-learn se fija porque los modelos serializados no son
+# compatibles entre versiones mayores distintas. Es la que trae Google Colab.
+scikit-learn==1.6.1
 nltk>=3.9
+joblib>=1.4
+
+# Aplicación
+streamlit>=1.35
 
 # Descarga de los datos desde la API de Kaggle
 requests>=2.32
@@ -23,3 +30,10 @@ ipykernel>=6.29
 jupyterlab>=4.2
 nbformat>=5.10
 nbclient>=0.10
+
+# Afinado del transformer. Solo se usan en notebooks/04, pensado para Google Colab,
+# donde ya vienen instalados. En local no son necesarios para el resto del proyecto.
+# transformers>=4.40,<5
+# torch>=2.4,<3
+# datasets>=2.19
+# accelerate>=0.30
