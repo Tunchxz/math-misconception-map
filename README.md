@@ -1,6 +1,6 @@
 # MAP - Charting Student Math Misunderstandings
 
-Análisis exploratorio del conjunto de datos de la competencia de Kaggle [*MAP - Charting Student Math Misunderstandings*](https://www.kaggle.com/competitions/map-charting-student-math-misunderstandings), organizada por la Universidad de Vanderbilt y The Learning Agency con datos de Eedi.
+Detección automática de errores conceptuales de matemática a partir de explicaciones escritas por estudiantes, con los datos de la competencia de Kaggle [*MAP - Charting Student Math Misunderstandings*](https://www.kaggle.com/competitions/map-charting-student-math-misunderstandings), organizada por la Universidad de Vanderbilt y The Learning Agency con datos de Eedi.
 
 ## El Problema
 
@@ -14,61 +14,88 @@ La tarea consiste en predecir, a partir de la explicación escrita, una etiqueta
 
 ```
 math-misconception-map/
-├── docs/
-│   └── informe.pdf                 # planteamiento del problema, objetivos y resultados del EDA
 ├── notebooks/
-│   ├── 01_carga_y_limpieza.ipynb   # estructura, calidad, limpieza y variables derivadas
-│   └── 02_eda.ipynb                # análisis exploratorio, hallazgos y conclusiones
+│   ├── 01_carga_y_limpieza.ipynb           # estructura, calidad, limpieza y variables derivadas
+│   ├── 02_eda.ipynb                        # análisis exploratorio, hallazgos y conclusiones
+│   ├── 03_modelado_clasico.ipynb           # entrenamiento y comparación de los modelos clásicos
+│   ├── 04_modelado_transformer.ipynb       # afinado de un transformer destilado, requiere GPU
+│   └── 05_comparacion_resultados.ipynb     # métricas reunidas y figuras del informe
 ├── src/
-│   ├── descargar_datos.py          # descarga los datos desde la API de Kaggle
-│   └── utils.py                    # rutas, estilo de gráficos y lectura/escritura
-├── data/raw/                       # datos crudos, no se modifican ni se versionan
-├── data/processed/                 # datos generados, reproducibles, no se versionan
-├── codebook.md                     # diccionario de datos, variables crudas y derivadas
+│   ├── config.py                           # rutas, semilla y paleta de color
+│   ├── data/make_dataset.py                # descarga desde Kaggle y construcción del conjunto limpio
+│   ├── features/build_features.py          # variables derivadas y representaciones del texto
+│   ├── models/train_model.py               # catálogo de modelos, métrica MAP@3 y validación
+│   ├── models/predict_model.py             # predicción en dos etapas
+│   ├── visualization/visualize.py          # estilo común de los gráficos
+│   ├── back_end/servicio.py                # capa de servicio de la aplicación
+│   └── front_end/app.py                    # interfaz de Streamlit
+├── .streamlit/config.toml                  # tema de la aplicación
+├── references/                             # investigación, planteamiento y diccionario de datos
+├── reports/
+│   └── figures/                            # figuras para informes y capturas de la aplicación
+├── models/                                 # artefactos entrenados, no se versionan
+├── data/raw/                               # datos crudos, no se modifican ni se versionan
+├── data/processed/                         # datos limpios, reproducibles, no se versionan
 └── requirements.txt
 ```
 
+## Documentación
+
+| Archivo                                | Contenido                                                                     |
+| -------------------------------------- | ----------------------------------------------------------------------------- |
+| `references/01_investigacion.md`       | Marco conceptual del problema y técnicas de procesamiento de lenguaje natural |
+| `references/02_planteamiento.md`       | Situación problemática, problema científico y objetivos                       |
+| `references/03_revision_algoritmos.md` | Revisión bibliográfica de los algoritmos                                      |
+| `references/codebook.md`               | Diccionario de datos, variables crudas y derivadas                            |
+
 ## Cómo Reproducirlo
 
-### Requisitos
+Los cuadernos funcionan igual en Google Colab y en una instalación local. Cada uno comienza con una celda de arranque que detecta el entorno, clona el repositorio e instala las dependencias cuando hace falta.
 
-- **Python 3.12**, gestionado con [`uv`](https://docs.astral.sh/uv/).
-- Una cuenta de Kaggle que haya **aceptado las reglas de la competencia**. Sin ese paso la API responde `403` y no permite descargar nada.
-- Un token de acceso de Kaggle en `~/.kaggle/access_token`, o bien la variable de entorno `KAGGLE_ACCESS_TOKEN`.
+### Opción A: Google Colab
 
-### 1. Crear el entorno
+Es la vía recomendada cuando la máquina local tiene poca memoria, y la única posible para el cuaderno 04, que necesita GPU.
 
-```bash
-uv venv --python 3.12 .venv
-VIRTUAL_ENV=.venv uv pip install -r requirements.txt
-```
+**1. Registrar el token de Kaggle como secreto.** En Colab, panel izquierdo, icono de la llave. Agregar un secreto llamado `KAGGLE_ACCESS_TOKEN` con el contenido de `~/.kaggle/access_token` (obtener legacy api credentials [aquí](https://www.kaggle.com/settings/api)) y habilitar el acceso desde el cuaderno. La cuenta debe haber aceptado antes las reglas de la competencia.
 
-### 2. Descargar los datos
+**2. Abrir cada cuaderno** desde `Archivo`, `Abrir cuaderno`, pestaña `GitHub`, buscando `Tunchxz/math-misconception-map`.
 
-```bash
-.venv/bin/python src/descargar_datos.py
-```
+**3. Ejecutarlos en orden.** El cuaderno 04 requiere activar la GPU en `Entorno de ejecución`, `Cambiar tipo de entorno de ejecución`, opción `T4 GPU`.
 
-Deja `train.csv`, `test.csv` y `sample_submission.csv` en `data/raw/`. El script es idempotente: si los archivos ya existen no vuelve a descargarlos.
+| Cuaderno                    | Qué hace                                    | GPU | Duración aproximada |
+| --------------------------- | ------------------------------------------- | --- | ------------------- |
+| `01_carga_y_limpieza`       | Estructura, calidad y limpieza de los datos | no  | 2 min               |
+| `02_eda`                    | Análisis exploratorio                       | no  | 3 min               |
+| `03_modelado_clasico`       | Entrena y compara los modelos clásicos      | no  | 15 a 25 min         |
+| `04_modelado_transformer`   | Afina un transformer destilado              | sí  | 30 a 40 min         |
+| `05_comparacion_resultados` | Reúne las métricas y genera las figuras     | no  | 2 min               |
 
-### 3. Registrar el kernel de Jupyter
-
-```bash
-.venv/bin/python -m ipykernel install --user \
-  --name map-misconceptions --display-name "MAP (py3.12)"
-```
-
-### 4. Ejecutar los notebooks en orden
-
-El orden es obligatorio, porque el segundo consume el archivo que produce el primero.
+**4. Recuperar los artefactos.** La última celda del cuaderno 03 descarga `artefactos_modelado.zip`. Para usarlo con la aplicación local:
 
 ```bash
-.venv/bin/python -m jupyter nbconvert --to notebook --execute --inplace \
-  notebooks/01_carga_y_limpieza.ipynb
-.venv/bin/python -m jupyter nbconvert --to notebook --execute --inplace \
-  notebooks/02_eda.ipynb
+unzip -o artefactos_modelado.zip -d /tmp/artefactos
+cp -r /tmp/artefactos/models/. models/
+cp -r /tmp/artefactos/transformed/. data/transformed/
 ```
+
+### Opción B: Instalación Local
+
+Requiere **Python 3.12** y [`uv`](https://docs.astral.sh/uv/), más un token de Kaggle en `~/.kaggle/access_token` (obtener legacy api credentials [aquí](https://www.kaggle.com/settings/api)) de una cuenta que haya aceptado las reglas de la competencia. Los cuadernos 01, 02 y 05 corren sin problema; el 03 es lento con poca memoria y el 04 no es viable sin GPU.
+
+```bash
+make env        # crea el entorno, instala las dependencias y registra el kernel
+make data       # descarga los datos desde la API de Kaggle
+make notebooks  # ejecuta los cuadernos en orden
+```
+
+### La Aplicación
+
+```bash
+make app        # equivale a: streamlit run src/front_end/app.py
+```
+
+Permite explorar las variables del conjunto limpio, clasificar explicaciones nuevas con uno o varios modelos a la vez, y comparar el rendimiento de los algoritmos en gráficas interactivas que pueden ocultarse. Necesita `data/processed/train_limpio.parquet` y, para clasificar, los artefactos en `models/`.
 
 ## Nota Sobre los Datos
 
-Los datos pertenecen a la competencia y están sujetos a sus reglas. Ni `data/raw/` ni `data/processed/` se versionan en este repositorio.
+Los datos pertenecen a la competencia y están sujetos a sus reglas. Ni `data/`, ni `models/` se versionan en este repositorio.
